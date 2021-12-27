@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="board">
+
+    
+    <resultMap type="com.spring.board.vo.BoardVo" id="boardVo">
+    	<result property="boardType" 	column="BOARD_TYPE"/>
+    	<result property="boardNum" 	column="BOARD_NUM"/>
+    	<result property="boardTitle" 	column="BOARD_TITLE"/>
+    	<result property="boardComment" column="BOARD_COMMENT"/>
+    	<result property="creator" 	    column="CREATOR"/>
+    	<result property="createTime"   column="CREATE_TIME"/>
+    	<result property="modifier" 	column="MODIFIER"/>
+    	<result property="modifiedTime" column="MODIFIED_TIME"/>
+    	<result property="fileRoot"     column="FILE_ROOT"/>
+    	<result property="boardHits"    column="BOARD_HITS"/>
+    	<result property="boardRef" 	column="BOARD_REF"/>
+    	<result property="boardStep" 	column="BOARD_STEP"/>
+    	<result property="boardLev" 	column="BOARD_LEV"/>
+    	<result property="fileSize"     column="FILE_SIZE"/>
+    	<result property="infCntn"      column="INF_CNTN "/>
+
+    	<collection property="comCodeVo"  resultMap="comcodeVo"></collection>
+
+    </resultMap>
+    
+    <resultMap type="com.spring.board.vo.ComCodeVo" id="comcodeVo">
+    	<result property="codeId"   column="CODE_ID"/>
+    	<result property="codeName" column="CODE_NAME"/>
+    	<result property="codeType" column="CODE_TYPE"/>
+    </resultMap>
+    
+    <resultMap type="com.spring.board.vo.AllTabColumnsVo" id="alltabcolumnsVo">
+    	<result property="tableName"     column="TABLE_NAME"/>
+    	<result property="columnName"    column="COLUMN_NAME"/>
+    	<result property="nullable"      column="NULLABLE"/>
+    	<result property="dataType"      column="DATA_TYPE"/>
+    	<result property="dataPrecision" column="DATA_PRECISION"/>
+    	<result property="dataScale"     column="DATA_SCALE"/>
+    	<result property="dataLength"    column="DATA_LENGTH"/>
+    	<result property="columnId"      column="COLUMN_ID"/>
+    	
+    	<collection property="allColCommentsVo"  resultMap="allcolcommentsVo"></collection>
+    	<collection property="allConsColumnsVo"  resultMap="allconscolumnsVo"></collection>
+    </resultMap>
+
+    <resultMap type="com.spring.board.vo.AllColCommentsVo" id="allcolcommentsVo">
+    	<result property="tableName"  column="TABLE_NAME"/>
+    	<result property="columnName" column="COLUMN_NAME"/>
+    	<result property="comments"   column="COMMENTS"/>
+    </resultMap>
+
+    <resultMap type="com.spring.board.vo.AllConsColumnsVo" id="allconscolumnsVo">
+    	<result property="constraintName"  column="CONSTRAINT_NAME"/>
+    	<result property="tableName"       column="TABLE_NAME"/>
+    	<result property="columnName"      column="COLUMN_NAME"/>
+    	<result property="position"        column="POSITION"/>
+    </resultMap>
+
+    <select id="boardList" parameterType="com.spring.board.vo.PageVo" resultMap="boardVo">
+    /*board.boardList*/
+        SELECT CODE_ID
+	    	 , CODE_NAME 
+	    	 , CODE_TYPE 
+             , BOARD_TYPE
+		  	 , BOARD_NUM
+		     , BOARD_TITLE
+		     , BOARD_COMMENT
+		     , CREATE_TIME
+		     , TOTAL_CNT
+		  FROM ( SELECT CODE_ID
+	    	          , CODE_NAME 
+	    	          , CODE_TYPE  
+		              , BOARD_TYPE
+					  , BOARD_NUM
+					  , BOARD_TITLE
+					  , BOARD_COMMENT
+			      	  , ROW_NUMBER() OVER(ORDER BY BOARD_NUM DESC) AS NUMROW
+			      	  , A.CREATE_TIME
+			      	  , COUNT(*) OVER() AS TOTAL_CNT
+			       FROM BOARD A,COM_CODE B
+			      WHERE A.BOARD_TYPE = B.CODE_ID
+			   )
+			   
+		 WHERE NUMROW BETWEEN #{startRow } AND #{endRow }
+    </select>
+    <select id="boardListMap" parameterType="map" resultMap="boardVo">
+    /*board.boardListMap*/
+        SELECT CODE_ID
+	    	 , CODE_NAME 
+	    	 , CODE_TYPE 
+             , BOARD_TYPE
+		  	 , BOARD_NUM
+		     , BOARD_TITLE
+		     , BOARD_COMMENT
+		     , CREATE_TIME
+		     , TOTAL_CNT
+		  FROM ( SELECT CODE_ID
+	    	          , CODE_NAME 
+	    	          , CODE_TYPE  
+		              , BOARD_TYPE
+					  , BOARD_NUM
+					  , BOARD_TITLE
+					  , BOARD_COMMENT
+			      	  , ROW_NUMBER() OVER(ORDER BY BOARD_NUM DESC) AS NUMROW
+			      	  , A.CREATE_TIME
+			      	  , COUNT(*) OVER() AS TOTAL_CNT
+			       FROM BOARD A,COM_CODE B
+			      WHERE A.BOARD_TYPE = B.CODE_ID
+			    <if test="typeList.size != 0">
+				AND BOARD_TYPE IN
+				<foreach item="item" index="index" collection="typeList" open="(" separator="," close=")">
+				#{item}
+				</foreach>
+				</if>  
+				<if test="keyword != null and keyword != ''">
+				<choose>
+				<when test="search == 'board_Title'">
+				AND BOARD_TITLE like   '%' || #{keyword} || '%'</when>
+				<otherwise>
+				AND BOARD_COMMENT LIKE '%' || #{keyword} || '%'
+				</otherwise>
+				</choose>	
+</if>
+			   )
+		 WHERE NUMROW BETWEEN #{pageVo.startRow } AND #{pageVo.endRow }
+
+    </select>
+    <select id="boardSizeList" parameterType="com.spring.board.vo.PageVo" resultMap="boardVo">
+    /*board.boardSizeList*/
+        SELECT CODE_ID
+	    	 , CODE_NAME 
+	    	 , CODE_TYPE 
+             , BOARD_TYPE
+		  	 , BOARD_NUM
+		     , BOARD_TITLE
+		     , BOARD_COMMENT
+		     , CREATE_TIME
+		     , TOTAL_CNT
+		  FROM ( SELECT CODE_ID
+	    	          , CODE_NAME 
+	    	          , CODE_TYPE  
+		              , BOARD_TYPE
+					  , BOARD_NUM
+					  , BOARD_TITLE
+					  , BOARD_COMMENT
+			      	  , ROW_NUMBER() OVER(ORDER BY BOARD_NUM DESC) AS NUMROW
+			      	  , A.CREATE_TIME
+			      	  , COUNT(*) OVER() AS TOTAL_CNT
+			       FROM BOARD A,COM_CODE B
+			      WHERE A.BOARD_TYPE = B.CODE_ID
+			  )
+		 WHERE NUMROW BETWEEN #{startRow } AND #{size }
+<!-- 		 WHERE NUMROW BETWEEN (#{pageNo}-1)*10 + 1 AND (#{pageNo})*10 -->
+    </select>
+    <select id="boardTotal" parameterType="Integer" resultType="Integer">
+    /*board.boardTotal*/
+		  SELECT COUNT(*) AS TOTAL_CNT
+			FROM BOARD	
+    </select>    	
+    <select id="boardTotalSearch" parameterType="map" resultType="Integer">
+    /*board.boardTotalSearch*/
+	SELECT COUNT(*) AS TOTAL_CNT
+	  FROM(SELECT BOARD_TYPE
+	         FROM BOARD
+	        WHERE 1=1 
+			<if test="keyList1.size != 0">
+		    AND BOARD_TYPE IN
+			<foreach item="item" index="index" collection="keyList1" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+			</if>
+			<if test="keyword != null and keyword != ''">
+			<choose>
+			<when test="search == 'board_Title'">
+			AND BOARD_TITLE like   '%' || #{keyword} || '%'</when>
+			<otherwise>
+			AND BOARD_COMMENT LIKE '%' || #{keyword} || '%'
+			</otherwise>
+			</choose>
+			</if>
+	  	   )
+    </select>    	
+    <select id="boardView" parameterType="com.spring.board.vo.BoardVo" resultMap="boardVo">
+    /*board.boardView*/
+    	SELECT BOARD_TYPE
+			 , BOARD_NUM
+			 , BOARD_TITLE
+			 , BOARD_COMMENT
+		  FROM BOARD
+    	 WHERE BOARD_TYPE = #{boardType }
+    	   AND BOARD_NUM  = #{boardNum }
+    </select>	  
+    <select id="boardInsert" parameterType="com.spring.board.vo.BoardVo">
+    /*board.boardInsert*/
+        INSERT INTO BOARD 
+        ( BOARD_TYPE
+        , BOARD_NUM
+	    , BOARD_TITLE
+        , BOARD_COMMENT
+        , CREATOR
+        , CREATE_TIME
+        , MODIFIER
+        , MODIFIED_TIME
+        )
+        VALUES
+        ( #{boardType }
+        , ( SELECT NVL(MAX(BOARD_NUM)+1,1) FROM BOARD WHERE BOARD_TYPE = #{boardType } )
+        , #{boardTitle }
+        , #{boardComment }
+        , 'SYSTEM'
+        , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+        , 'SYSTEM'
+        , TO_CHAR(SYSDATE)
+        )
+    </select> 
+    <update id="boardModify">
+    /*board.boardModify*/
+     UPDATE BOARD
+		SET BOARD_TYPE = #{boardType}
+          , BOARD_TITLE = #{boardTitle}
+          , BOARD_COMMENT = #{boardComment}
+      WHERE BOARD_TYPE = #{boardType}
+        AND BOARD_NUM = #{boardNum}
+    </update>
+    <select id="boardDeleteAll">
+    /*board.boardDeleteAll*/
+    DELETE FROM BOARD 
+     WHERE BOARD_NUM IN
+    <foreach collection="list" item="item" open="(" separator="," close=")">
+    	${item}
+    </foreach>
+    </select>
+    <select id="excelSelect" parameterType="com.spring.board.vo.BoardVo" resultMap="boardVo">
+    /*board.excelSelect*/
+        SELECT CODE_ID
+	    	 , CODE_NAME 
+	    	 , CODE_TYPE 
+             , BOARD_TYPE
+		  	 , BOARD_NUM
+		     , BOARD_TITLE
+		     , BOARD_COMMENT
+		     , CREATE_TIME
+		     , TOTAL_CNT
+		  FROM ( SELECT CODE_ID
+	    	          , CODE_NAME 
+	    	          , CODE_TYPE  
+		              , BOARD_TYPE
+					  , BOARD_NUM
+					  , BOARD_TITLE
+					  , BOARD_COMMENT
+			      	  , ROW_NUMBER() OVER(ORDER BY BOARD_NUM DESC) AS NUMROW
+			      	  , A.CREATE_TIME
+			      	  , COUNT(*) OVER() AS TOTAL_CNT
+			       FROM BOARD A,COM_CODE B
+			      WHERE A.BOARD_TYPE = B.CODE_ID
+			   )
+	  WHERE BOARD_NUM IN
+	<if test="list.size != 0 ">
+    <foreach collection="list" item="excel" open="(" separator="," close=")">
+    	${excel}
+    </foreach>
+    </if>
+      ORDER BY BOARD_NUM DESC
+    </select>
+    
+    <select id="codeList" parameterType="com.spring.board.vo.ComCodeVo" resultMap="comcodeVo">
+    /*board.codeList*/
+	SELECT CODE_ID
+		 , CODE_NAME 
+	     , CODE_TYPE
+      FROM COM_CODE
+    </select>
+    <select id="boardSearchList" parameterType="com.spring.board.vo.PageVo" resultMap="boardVo">
+    /*board.boardSearchList*/
+        SELECT CODE_ID
+	    	 , CODE_NAME 
+	    	 , CODE_TYPE 
+             , BOARD_TYPE
+		  	 , BOARD_NUM
+		     , BOARD_TITLE
+		     , BOARD_COMMENT
+		     , CREATE_TIME
+		     , TOTAL_CNT
+		  FROM ( SELECT CODE_ID
+	    	          , CODE_NAME 
+	    	          , CODE_TYPE  
+		              , BOARD_TYPE
+					  , BOARD_NUM
+					  , BOARD_TITLE
+					  , BOARD_COMMENT
+			      	  , ROW_NUMBER() OVER(ORDER BY BOARD_NUM DESC) AS NUMROW
+			      	  , A.CREATE_TIME
+			      	  , COUNT(*) OVER() AS TOTAL_CNT
+			       FROM BOARD A,COM_CODE B
+			      WHERE A.BOARD_TYPE = B.CODE_ID
+					<if test="keyList1.size != 0">
+				    AND BOARD_TYPE IN
+					<foreach item="item" index="index" collection="keyList1" open="(" separator="," close=")">
+						#{item}
+					</foreach>
+					</if>
+					<if test="keyword != null and keyword != ''">
+			    		<if test="search == 'board_title'"  >AND BOARD_TITLE like   '%' || #{keyword} || '%'</if>
+			    		<if test="search == 'board_comment'">AND BOARD_COMMENT like '%' || #{keyword} || '%'</if>
+					</if> 
+
+			    )
+			 WHERE NUMROW BETWEEN #{pageVo.startRow } AND (#{pageVo.endRow })
+<!-- 	     WHERE NUMROW BETWEEN (#{pageNo}-1)*10 + 1 AND (#{pageNo})*10 -->
+<!-- 	     WHERE NUMROW BETWEEN #{pageVo.startRow } AND #{pageVo.endRow } -->
+    </select>
+    <select id="boardSearch2" parameterType="com.spring.board.vo.PageVo" resultMap="boardVo">
+    /*board.boardSearch2*/
+		SELECT CODE_ID
+	    	 , CODE_NAME 
+	    	 , CODE_TYPE 
+             , BOARD_TYPE
+		  	 , BOARD_NUM
+		     , BOARD_TITLE
+		     , BOARD_COMMENT
+		     , CREATE_TIME
+		     , TOTAL_CNT
+		  FROM(SELECT CODE_ID
+	    	        , CODE_NAME 
+	    	        , CODE_TYPE  
+		            , BOARD_TYPE
+					, BOARD_NUM
+					, BOARD_TITLE
+					, BOARD_COMMENT
+			      	, ROW_NUMBER() OVER(ORDER BY BOARD_NUM DESC) AS NUMROW
+			      	, A.CREATE_TIME
+			      	, COUNT(*) OVER() AS TOTAL_CNT
+			     FROM BOARD A,COM_CODE B
+			    WHERE A.BOARD_TYPE = B.CODE_ID
+				<if test="keyword != null">
+			    	<if test="search == 'board_title'"  >AND BOARD_TITLE like   '%' || #{keyword} || '%'</if>
+			    	<if test="search == 'board_comment'">AND BOARD_COMMENT like '%' || #{keyword} || '%'</if>
+				</if> 
+			    )
+	     WHERE NUMROW BETWEEN (#{pageNo}-1)*10 + 1 AND (#{pageNo})*10
+    </select>
+    <select id="searchBoardNum" resultMap="boardVo">
+    /*board.searchBoardNum*/
+    	SELECT BOARD_NUM
+    	     , BOARD_TITLE
+    	     , BOARD_COMMENT
+    	  FROM BOARD
+    	 WHERE BOARD_NUM = #{boardNum}
+    </select>
+    <select id="selectTableAll" resultMap="alltabcolumnsVo">
+    /*board.tableall*/
+    SELECT A.COLUMN_NAME COLUMN_NAME
+         , B.COMMENTS    COMMENTS
+         , C.POSITION    POSITION
+         , A.NULLABLE    NULLABLE
+         , A.DATA_TYPE || '(' ||
+           DECODE(DATA_TYPE,'NUMBER'  , DATA_PRECISION || ',' || DATA_SCALE
+                           ,'VARCHAR2', DATA_LENGTH
+                           ,'CHAR'    , DATA_LENGTH
+                           , NULL ) || ')'   DATA_TYPE
+      FROM ALL_TAB_COLUMNS      A
+         , ALL_COL_COMMENTS     B
+         , ALL_CONS_COLUMNS     C
+     WHERE A.TABLE_NAME     = UPPER(#{tableName})
+       AND B.TABLE_NAME     = A.TABLE_NAME
+       AND B.COLUMN_NAME    = A.COLUMN_NAME
+       AND C.TABLE_NAME(+)  = A.TABLE_NAME
+       AND C.COLUMN_NAME(+) = A.COLUMN_NAME
+       AND C.CONSTRAINT_NAME(+) LIKE '%PK%'
+     ORDER BY A.COLUMN_ID
+    </select>
+    <select id="selectBoardTable" parameterType="String"  resultType="String">
+    /*board.selectBoardTable*/
+   SELECT
+          BOARD_TYPE
+  ||'|'|| BOARD_NUM
+  ||'|'|| BOARD_TITLE
+  ||'|'|| BOARD_COMMENT
+  ||'|'|| CREATOR
+  ||'|'|| CREATE_TIME
+  ||'|'|| MODIFIER
+  ||'|'|| MODIFIED_TIME
+  ||'|'|| FILE_ROOT
+  ||'|'|| BOARD_HITS
+  ||'|'|| BOARD_REF
+  ||'|'|| BOARD_STEP
+  ||'|'|| BOARD_LEV
+  ||'|'|| FILE_SIZE
+      as INF_CNTN
+    FROM BOARD
+   WHERE BOARD_TYPE = REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1,1)
+     AND BOARD_NUM  = REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1,2)
+    </select>
+    
+    <update id="updateBoardTable">
+    /*board.updateBoardTable*/
+    UPDATE BOARD
+       SET 
+           BOARD_TYPE    = RTRIM(REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1 ,1))
+         , BOARD_NUM     = RTRIM(REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1 ,2))
+         , BOARD_TITLE   = RTRIM(REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1 ,3))
+         , BOARD_COMMENT = RTRIM(REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1 ,4))
+         , CREATOR       = RTRIM(REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1 ,5))
+         , CREATE_TIME   = RTRIM(REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1 ,6))
+         , MODIFIER      = RTRIM(REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1 ,7))
+         , MODIFIED_TIME = RTRIM(REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1 ,8))
+         , FILE_ROOT     = RTRIM(REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1 ,9))
+         , BOARD_HITS    = RTRIM(REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1,10))
+         , BOARD_REF     = RTRIM(REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1,11))
+         , BOARD_STEP    = RTRIM(REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1,12))
+         , BOARD_LEV     = RTRIM(REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1,13))
+         , FILE_SIZE     = RTRIM(REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1,14))
+     WHERE 
+           BOARD_TYPE = REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1,1)
+       AND BOARD_NUM  = REGEXP_SUBSTR(#{inf_cntn},'[^|]+',1,2)
+    
+    </update>
+    
+    
+</mapper>

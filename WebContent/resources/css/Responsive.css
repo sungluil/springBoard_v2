@@ -1,0 +1,46 @@
+@charset "UTF-8";
+/* 노말라이즈 */
+body, ul, li {
+  margin:0;
+  padding:0;
+  list-style:none;
+}
+a {
+  color:inherit;
+  text-decoration:none;
+}
+
+/* 라이브러리 */
+/* 좌우 너비가 너비 넓게 퍼지는 것을 막아야 할 떄 */
+.con {
+  margin-left:auto;
+  margin-right:auto;
+}
+
+/* cell의 부모 */
+.row::after {
+	content: "";
+	display: block;
+	clear: both;
+}
+
+/* 뭔가를 옆으로 눕히고 싶을 때*/
+/* 한줄에 여러개 나오게 하고싶을때 */
+.cell {
+	float: left;
+}
+
+/* 커스텀 */
+.con {
+  max-width: 1000px;
+}
+
+/* 이미지를 반응형으로 만들 때 */
+.img-box > img {
+	width: 100%;
+	display: block;
+}
+
+.list1 .cell {
+	width: 25%;
+}
